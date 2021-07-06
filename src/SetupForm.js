@@ -2,34 +2,27 @@ import React from 'react'
 import { useGlobalContext } from './context'
 
 const SetupForm = () => {
-  const {
-    handleChange,
-    handleSubmit,
-    amount,
-    category,
-    difficulty,
-    isError,
-    errorMsg,
-  } = useGlobalContext()
-
+  const { isError, errorMessage, quiz, handleChange, handleSubmit } =
+    useGlobalContext()
+  const {amount, category, difficulty} = quiz;
   return (
-    <section className='quiz quiz-small'>
-      <form className='setup-form' onSubmit={handleSubmit}>
-        <h2>setup quiz</h2>
-        <div className='form-control'>
-          <label htmlFor='amount'>number of questions</label>
-          <input
-            type='number'
-            className='form-input'
-            name='amount'
-            minLength='1'
-            maxLength='50'
-            value={amount}
-            onChange={handleChange}
-          />
-        </div>
-        <div className='form-control'>
-          <label htmlFor='category'>
+    <main>
+      <section className='quiz quiz-small'>
+        <form action='' className='setup-form' onSubmit={handleSubmit}>
+          <h2>Setup your quiz</h2>
+          <div className='form-control'>
+            <label htmlFor='amount'>number of questions</label>
+            <input
+              type='number'
+              name='amount'
+              id='amount'
+              className='form-input'
+              value={amount}
+              onChange={handleChange}
+            />
+          </div>
+          <div className='form-control'>
+            <label htmlFor='category'>category</label>
             <select
               name='category'
               id='category'
@@ -37,34 +30,36 @@ const SetupForm = () => {
               value={category}
               onChange={handleChange}
             >
+              <option value='Science: Computers'>Science: Computers</option>
               <option value='sports'>sports</option>
               <option value='history'>history</option>
               <option value='politics'>politics</option>
+              <option value='Entertainment: Music'>Entertainment: Music</option>
+              <option value='Celebrities'>Celebrities</option>
+              <option value='General Knowledge'>General Knowledge</option>
             </select>
-          </label>
-        </div>
-        <div className='form-control'>
-          <label htmlFor='difficulty'>select difficulty</label>
-          <select
-            name='difficulty'
-            id='difficulty'
-            className='form-input'
-            onChange={handleChange}
-            value={difficulty}
-          >
-            <option value='easy'>easy</option>
-            <option value='medium'>medium</option>
-            <option value='hard'>hard</option>
-          </select>
-        </div>
-        {
-          isError && <p className="error">{errorMsg}</p>
-        }
-        <button className='submit-btn' type='submit'>
-          start
-        </button>
-      </form>
-    </section>
-  )
-}
+          </div>
+          <div className='form-control'>
+            <label htmlFor='difficulty'>select difficulty</label>
+            <select
+              name='difficulty'
+              id='difficulty'
+              className='form-input'
+              value={difficulty}
+              onChange={handleChange}
+            >
+              <option value='easy'>easy</option>
+              <option value='medium'>medium</option>
+              <option value='hard'>hard</option>
+            </select>
+          </div>
+          {isError && <p className='error'>{errorMessage}</p>}
+          <button type='submit' className='submit-btn'>
+            start
+          </button>
+        </form>
+      </section>
+    </main>
+  ) 
+  }
 export default SetupForm

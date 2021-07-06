@@ -1,126 +1,88 @@
 import axios from 'axios'
-import React, { useState, useContext, useEffect } from 'react'
+import React, { useReducer, useContext, useEffect } from 'react'
+import useFetch from './useFetch'
+import { reducer } from './reducer'
+import { NEXT_QUESTION, CHECK_ANSWER, CLOSE_MODAL, SET_QUIZ } from './actions'
 
 const table = {
+  'Science: Computers': 18,
   sports: 21,
   history: 23,
   politics: 24,
+  'Entertainment: Music': 12,
+  Celebrities: 26,
+  'General Knowledge': 9,
 }
 
-const API_ENDPOINT = 'https://opentdb.com/api.php?'
+const API_ENDPOINT = 'https://opentdb.com/api.php?type=multiple'
 
 const url = ''
-const tempUrl =
-  'https://opentdb.com/api.php?amount=10&category=21&difficulty=easy&type=multiple'
+
 const AppContext = React.createContext()
 
-const AppProvider = ({ children }) => {
-  const [isWaiting, setIsWaiting] = useState(true)
-  const [isLoading, setIsLoading] = useState(false)
-  const [questions, setQuestions] = useState([])
-  const [index, setIndex] = useState(0)
-  const [correct, setCorrect] = useState(0)
-  const [error, setError] = useState({
-    isError: false,
-    errorMsg: '',
-  })
-  const [quiz, setQuiz] = useState({
+const initialState = {
+  index: 0,
+  correct: 0,
+  isShowModal: false,
+  quiz: {
     amount: 10,
-    category: 'sports',
+    category: 'Science: Computers',
     difficulty: 'easy',
-  })
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  },
+}
+const AppProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(reducer, initialState)
+  const {amount, category, difficulty} = state.quiz
+  const {
+    isWaiting,
+    setIsWaiting,
+    isLoading,
+    isError,
+    errorMessage,
+    questions,
+    handleSubmit
+  } = useFetch(
+    `&amount=${amount}&category=${
+      table[category]
+    }&difficulty=${difficulty}`
+  )
 
-  const fetchQuestions = async (url) => {
-    setIsWaiting(false)
-    setIsLoading(true)
-    try {
-      const response = await axios(url).catch((err) => console.log(err))
-      if (response) {
-        const data = response.data.results
-        if (data.length > 0) {
-          setQuestions(data)
-          setIsWaiting(false)
-          setIsLoading(false)
-          setError({ ...error, isError: false })
-        } else {
-          setIsWaiting(true)
-          setError({
-            isError: true,
-            errorMsg: 'cant generate questions please try different options',
-          })
-        }
-      } else {
-        setIsWaiting(true)
-      }
-    } catch (error) {
-      console.log(error)
-      isLoading(false)
-    }
+  const nextQuestion =()=> {
+    
+    dispatch({ type: NEXT_QUESTION, payload: {length: questions.length, nextPage: state.index+1}})
   }
-
-  const nextQuestion = () => {
-    setIndex((currValue) => {
-      const index = currValue + 1
-      if (index > questions.length - 1) {
-        openModal()
-        return 0
-      } else {
-        return index
-      }
+  const checkAnswer =(value)=> {
+    if(value) {
+      dispatch({ type: CHECK_ANSWER, payload: value })
+    }
+    dispatch({
+      type: NEXT_QUESTION,
+      payload: { length: questions.length, nextPage: state.index + 1 },
     })
   }
-
-  const checkAnswer = (ans) => {
-    const answer = questions.find((item) => item.correct_answer === ans)
-
-    if (answer) {
-      setCorrect((currValue) => currValue + 1)
-    }
-    nextQuestion()
-  }
-  const openModal = () => {
-    setIsModalOpen(true)
-  }
-  const closeModal = () => {
-    setIsWaiting(true)
-    setCorrect(0)
-    setIsModalOpen(false)
-  }
-  const handleChange = (e) => {
-    const name = e.target.name
-    const value = e.target.value
-    setQuiz({ ...quiz, [name]: value })
-  }
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    const { amount, category, difficulty } = quiz
-
-
-    const url = `${API_ENDPOINT}amount=${amount}&difficulty=${difficulty}&category=${table[category]}&type=multiple`
-    fetchQuestions(url);
-  }
-  // useEffect(() => {
-  //   fetchQuestions(tempUrl)
-  // }, [])
+const closeModal =()=> {
+  setIsWaiting(true);
+  dispatch({ type: CLOSE_MODAL })
+}
+const handleChange=(e)=> {
+   const name = e.target.name
+   const value = e.target.value
+  dispatch({ type: SET_QUIZ, payload: {name, value} })
+  
+}
 
   return (
     <AppContext.Provider
       value={{
-        isWaiting,
+        ...state,
         isLoading,
+        isWaiting,
+        isError,
+        errorMessage,
         questions,
-        index,
-        correct,
-        ...error,
-        isModalOpen,
-        setIndex,
-        setIsModalOpen,
-        setCorrect,
         nextQuestion,
         checkAnswer,
         closeModal,
-        ...quiz,
         handleChange,
         handleSubmit,
       }}
